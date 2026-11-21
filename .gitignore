@@ -18,7 +18,8 @@ hackathon-site-improvement-ideas.json
 
 # Non-essential scripts (.mjs)
 test-overpass.mjs
-scripts/*.mjs
+scripts/seed*.mjs
+!scripts/test-runner.mjs
 
 # Root raw logo (cleanly copied to public/nirvor_logo.png)
 /nirvor_logo.png
