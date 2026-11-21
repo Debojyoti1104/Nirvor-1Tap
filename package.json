@@ -1,6 +1,7 @@
 {
   "name": "nirvor-1tap",
   "version": "0.1.0",
+  "description": "Zero-dependency, offline-first civic emergency & disaster response assistant for North East India with 1-tap SOS, 10km responder radar, and 3,220+ preloaded facilities.",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
