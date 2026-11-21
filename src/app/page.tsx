@@ -490,6 +490,7 @@ export default function HomePage() {
               incidents={allIncidents}
               responderLocation={userLocation}
               focusedIncidentId={focusedIncidentId}
+              onResetFocus={() => setFocusedIncidentId(null)}
               lowBandwidth={lowBandwidth}
             />
             {incidents.length > 0 && (

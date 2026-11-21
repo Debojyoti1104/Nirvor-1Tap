@@ -11,6 +11,7 @@ interface EmergencyMapProps {
   incidents: Incident[]
   responderLocation?: { lat: number; lng: number } | null
   focusedIncidentId?: string | null
+  onResetFocus?: () => void
   lowBandwidth?: boolean
 }
 
@@ -80,6 +81,7 @@ export default function EmergencyMap({
   incidents,
   responderLocation,
   focusedIncidentId,
+  onResetFocus,
   lowBandwidth = false,
 }: EmergencyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
@@ -87,13 +89,18 @@ export default function EmergencyMap({
   const mapInstanceRef = useRef<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const incidentMarkersRef = useRef<Map<string, any>>(new Map())
+  const lastFocusedIdRef = useRef<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
   const [baseLayer, setBaseLayer] = useState<BaseLayer>('street')
   const [mapLoaded, setMapLoaded] = useState(false)
 
-  // ── Fly to & Open Popup on Focused Incident ──────────────────────────────
+  // ── Fly to & Open Popup on Focused Incident (ONLY ONCE per selection) ──
   useEffect(() => {
     if (!focusedIncidentId || !mapInstanceRef.current) return
+    // Prevent repeated re-focusing when background data updates every 5 seconds
+    if (lastFocusedIdRef.current === focusedIncidentId) return
+    lastFocusedIdRef.current = focusedIncidentId
+
     const marker = incidentMarkersRef.current.get(focusedIncidentId)
     const targetIncident = incidents.find((i) => i.id === focusedIncidentId)
 
@@ -119,7 +126,7 @@ export default function EmergencyMap({
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [focusedIncidentId, incidents, activeFilter])
+  }, [focusedIncidentId, activeFilter])
 
   useEffect(() => {
     if (lowBandwidth || !mapRef.current) return
@@ -298,6 +305,16 @@ export default function EmergencyMap({
       // Hub Marker
       L.circleMarker([hub.lat, hub.lng], { radius: 7, fillColor: '#0F172A', color: 'white', weight: 2, fillOpacity: 1 })
         .addTo(map).bindTooltip(`Hub: ${hub.name}`, { permanent: false })
+
+      // Reset focus when user manually closes popup or moves map
+      map.on('popupclose', () => {
+        lastFocusedIdRef.current = null
+        onResetFocus?.()
+      })
+      map.on('dragstart', () => {
+        lastFocusedIdRef.current = null
+        onResetFocus?.()
+      })
 
       setMapLoaded(true)
     }
