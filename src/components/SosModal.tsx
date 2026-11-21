@@ -85,7 +85,7 @@ export default function SosModal({ open, onClose, hub }: SosModalProps) {
   }
 
   const whatsappText = encodeURIComponent(
-    `SOS EMERGENCY — Northeast Connect\n\nPacket: ${sosPacket}\nLocation: ${coordStr}\nHub: ${hub.name}, ${hub.state}\nMaps: ${mapsLink}\n\nSend help immediately.`
+    `SOS EMERGENCY — Nirvor-1Tap\n\nPacket: ${sosPacket}\nLocation: ${coordStr}\nHub: ${hub.name}, ${hub.state}\nMaps: ${mapsLink}\n\nSend help immediately.`
   )
   const smsBody = encodeURIComponent(`${sosPacket} ${mapsLink}`)
 

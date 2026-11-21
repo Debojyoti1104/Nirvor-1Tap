@@ -40,7 +40,7 @@ export default function InstallButton() {
         setPromptEvent(null)
       }}
       className="hidden md:flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
-      title="Install Northeast Connect for offline use"
+      title="Install Nirvor-1Tap for offline use"
     >
       <Download className="w-3 h-3" />
       Install

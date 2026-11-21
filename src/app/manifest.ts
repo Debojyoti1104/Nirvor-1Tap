@@ -2,10 +2,10 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Northeast Connect — Community Emergency Assistant',
-    short_name: 'NE Connect',
+    name: 'Nirvor-1Tap — Community Emergency Assistant',
+    short_name: 'Nirvor-1Tap',
     description:
-      'Offline-capable emergency information, SOS packets and relief coordination for North East India.',
+      'Nirvor-1Tap — offline-capable emergency information, SOS packets and relief coordination for North East India.',
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait-primary',

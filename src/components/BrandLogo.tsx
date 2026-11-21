@@ -15,7 +15,7 @@ export default function BrandLogo({ size = 32, showWordmark = true, className = 
         viewBox="0 0 48 48"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        aria-label="Northeast Connect Brand Mark"
+        aria-label="Nirvor-1Tap brand mark"
       >
         {/* Shield base */}
         <path
@@ -72,7 +72,7 @@ export default function BrandLogo({ size = 32, showWordmark = true, className = 
               lineHeight: 1,
             }}
           >
-            NORTHEAST
+            NIRVOR
           </span>
           <span
             style={{
@@ -84,7 +84,7 @@ export default function BrandLogo({ size = 32, showWordmark = true, className = 
               lineHeight: 1.2,
             }}
           >
-            CONNECT
+            1TAP
           </span>
         </div>
       )}

@@ -1,6 +1,6 @@
 # HANDOVER FOR GEMINI / FUTURE DEVELOPERS
 
-**Project**: Northeast Connect (Civic Emergency Assistant for North East India)  
+**Project**: Nirvor-1Tap (Northeast Connect — Civic Emergency Assistant for North East India)  
 **Location**: `d:\northeast-connect`  
 **Git Branch**: `main`  
 **Current Date**: November 2026  

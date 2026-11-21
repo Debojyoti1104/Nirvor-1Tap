@@ -1,6 +1,6 @@
-# Northeast Connect
+# Nirvor-1Tap
 
-**Community Emergency Assistant for North East India**
+**Northeast Connect — Community Emergency Assistant for North East India**
 
 > A civic emergency platform for the 8 North Eastern states — built to keep working when the network, the power, or the road does not.
 
@@ -12,7 +12,7 @@
 
 The problem statement asks for three things. Most dashboards only do the first.
 
-| Requirement | How Northeast Connect answers it |
+| Requirement | How Nirvor-1Tap answers it |
 | --- | --- |
 | **Access** essential emergency information | Offline-first PWA, 30+ verified helplines, 21 districts/hubs, flood/landslide/earthquake checklists |
 | **Stay informed** | Live Open-Meteo weather, terrain-weighted risk index, advisory bar, low-bandwidth mode |
@@ -92,7 +92,7 @@ npm start
 ## 2. Supabase setup (5 minutes, free, no credit card)
 
 1. Go to **https://supabase.com** → sign in → **New project**.
-   - Name: `northeast-connect`
+   - Name: `nirvor-1tap`
    - Region: **Mumbai / ap-south-1** (closest to NE India)
    - Set a database password and save it.
 2. Wait for the project to finish provisioning (~2 min).
@@ -155,7 +155,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ## 3. Deploy (Vercel, free, no credit card)
 
 1. Push this repo to GitHub (public, single `main` branch).
-2. Go to **https://vercel.com/new** → **Import Git Repository** → select `northeast-connect`.
+2. Go to **https://vercel.com/new** → **Import Git Repository** → select `nirvor-1tap`.
 3. Framework preset: **Next.js** (auto-detected). Leave build settings as-is.
 4. Expand **Environment Variables** and add:
    - `SUPABASE_URL`

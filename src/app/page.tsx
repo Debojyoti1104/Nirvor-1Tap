@@ -403,7 +403,7 @@ export default function HomePage() {
         {/* Footer */}
         <footer className="text-center py-4 border-t border-slate-200">
           <p className="text-xs text-slate-400">
-            Northeast Connect · Community Emergency Assistant · NE India
+            Nirvor-1Tap · Community Emergency Assistant · NE India
             <span className="mx-2">·</span>
             Data: Open-Meteo, OpenStreetMap
           </p>
