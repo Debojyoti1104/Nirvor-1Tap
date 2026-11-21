@@ -10,6 +10,7 @@ interface EmergencyMapProps {
   facilities: Facility[]
   incidents: Incident[]
   responderLocation?: { lat: number; lng: number } | null
+  focusedIncidentId?: string | null
   lowBandwidth?: boolean
 }
 
@@ -69,14 +70,40 @@ export default function EmergencyMap({
   facilities,
   incidents,
   responderLocation,
+  focusedIncidentId,
   lowBandwidth = false,
 }: EmergencyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapInstanceRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const incidentMarkersRef = useRef<Map<string, any>>(new Map())
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
   const [baseLayer, setBaseLayer] = useState<BaseLayer>('street')
   const [mapLoaded, setMapLoaded] = useState(false)
+
+  // ── Fly to & Open Popup on Focused Incident ──────────────────────────────
+  useEffect(() => {
+    if (!focusedIncidentId || !mapInstanceRef.current) return
+    const marker = incidentMarkersRef.current.get(focusedIncidentId)
+    const targetIncident = incidents.find((i) => i.id === focusedIncidentId)
+
+    if (targetIncident?.lat && targetIncident?.lng) {
+      const map = mapInstanceRef.current
+      if (activeFilter !== 'all' && activeFilter !== 'incident') {
+        setActiveFilter('all')
+      }
+      map.flyTo([targetIncident.lat, targetIncident.lng], 15, {
+        animate: true,
+        duration: 1.2,
+      })
+      setTimeout(() => {
+        if (marker) {
+          marker.openPopup()
+        }
+      }, 500)
+    }
+  }, [focusedIncidentId, incidents, activeFilter])
 
   useEffect(() => {
     if (lowBandwidth || !mapRef.current) return
@@ -90,6 +117,8 @@ export default function EmergencyMap({
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
       }
+
+      incidentMarkersRef.current.clear()
 
       // Default center: responder coordinates if available, else hub
       const centerLat = responderLocation?.lat ?? hub.lat
@@ -185,7 +214,7 @@ export default function EmergencyMap({
           const geoUri = getNativeGeoUri(inc.lat, inc.lng, `Emergency: ${inc.category}`)
 
           // Top direction button inside the popup for responders
-          L.marker([inc.lat, inc.lng], { icon: createIcon(color, isDanger ? '🚨' : '!', isDanger ? 32 : 24) })
+          const marker = L.marker([inc.lat, inc.lng], { icon: createIcon(color, isDanger ? '🚨' : '!', isDanger ? 32 : 24) })
             .bindPopup(`<div style="font-family:sans-serif;min-width:240px;padding:2px">
               <!-- DIRECTION BUTTON ON TOP OF MESSAGE -->
               <div style="margin-bottom:8px">
@@ -205,6 +234,8 @@ export default function EmergencyMap({
               </div>
             </div>`)
             .addTo(map)
+
+          incidentMarkersRef.current.set(inc.id, marker)
         })
       }
 
@@ -242,6 +273,17 @@ export default function EmergencyMap({
     responderLocation?.lng,
   ])
 
+  const handleFilterClick = (filter: FilterType) => {
+    setActiveFilter(filter)
+    if (filter === 'incident' && mapInstanceRef.current) {
+      const valid = incidents.filter(i => i.lat && i.lng)
+      if (valid.length > 0) {
+        const bounds = valid.map(i => [i.lat!, i.lng!] as [number, number])
+        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 })
+      }
+    }
+  }
+
   if (lowBandwidth) {
     return (
       <div className="bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
@@ -252,7 +294,7 @@ export default function EmergencyMap({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
+    <div id="emergency-map-section" className="rounded-lg border border-slate-200 overflow-hidden bg-white scroll-mt-20">
       <div className="flex items-center gap-1 p-2 border-b border-slate-100 bg-white flex-wrap">
         <span className="text-xs text-slate-400 font-medium mr-1">Base:</span>
         {(Object.keys(BASE_LAYERS) as BaseLayer[]).map(layer => (
@@ -269,7 +311,7 @@ export default function EmergencyMap({
         {(Object.keys(FILTER_LABELS) as FilterType[]).map(f => (
           <button
             key={f}
-            onClick={() => setActiveFilter(f)}
+            onClick={() => handleFilterClick(f)}
             className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${activeFilter === f ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
           >
             {FILTER_LABELS[f]}

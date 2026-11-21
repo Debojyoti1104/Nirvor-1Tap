@@ -79,6 +79,7 @@ export default function HomePage() {
   const [syncStatus, setSyncStatus] = useState<'supabase' | 'memory' | 'offline'>('offline')
   const [responderMode, setResponderMode] = useState(false)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [focusedIncidentId, setFocusedIncidentId] = useState<string | null>(null)
   const [allFacilities, setAllFacilities] = useState<Facility[]>([])
 
   // ── Auto-fetch Offline/Online GPS Coordinates ─────────────────────────────
@@ -240,6 +241,14 @@ export default function HomePage() {
     setServerIncidents(prev => [incident, ...prev.filter(i => i.id !== incident.id)])
     broadcastChange()
     loadCommunity()
+  }
+
+  const handleSelectIncident = (inc: Incident) => {
+    if (!inc.lat || !inc.lng) return
+    if (activeTab !== 'map') setActiveTab('map')
+    setFocusedIncidentId(inc.id)
+    const el = document.getElementById('emergency-map-section')
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
   const handleToggleResponderMode = () => {
@@ -466,6 +475,7 @@ export default function HomePage() {
               facilities={facilities}
               incidents={allIncidents}
               responderLocation={userLocation}
+              focusedIncidentId={focusedIncidentId}
               lowBandwidth={lowBandwidth}
             />
             {incidents.length > 0 && (
@@ -483,6 +493,8 @@ export default function HomePage() {
                       incident={incident}
                       responderMode={responderMode}
                       userLocation={userLocation}
+                      isFocused={focusedIncidentId === incident.id}
+                      onSelect={handleSelectIncident}
                       onVerify={handleVerify}
                     />
                   ))}
@@ -590,11 +602,15 @@ function IncidentRow({
   incident,
   responderMode,
   userLocation,
+  isFocused = false,
+  onSelect,
   onVerify,
 }: {
   incident: Incident
   responderMode: boolean
   userLocation: { lat: number; lng: number } | null
+  isFocused?: boolean
+  onSelect?: (incident: Incident) => void
   onVerify: (id: string, verified: boolean) => void
 }) {
   const sevColor = {
@@ -613,10 +629,22 @@ function IncidentRow({
     : null
 
   return (
-    <div className="px-4 py-3 hover:bg-slate-50 transition-colors">
+    <div
+      onClick={() => onSelect?.(incident)}
+      suppressHydrationWarning
+      className={`group px-4 py-3 transition-all cursor-pointer border-l-4 ${
+        isFocused
+          ? 'bg-red-50/80 border-red-600 shadow-sm'
+          : 'hover:bg-slate-50 border-transparent hover:border-slate-300'
+      }`}
+      title="Click to view and highlight on map"
+    >
       {/* 🧭 TOP DIRECTION BUTTON FOR RESPONDERS */}
       {responderMode && mapsUrl && (
-        <div className="mb-2 flex items-center justify-between bg-red-50/90 border border-red-200 px-2.5 py-1.5 rounded-lg">
+        <div
+          className="mb-2 flex items-center justify-between bg-red-50/90 border border-red-200 px-2.5 py-1.5 rounded-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
           <span className="text-[11px] font-bold text-red-700 uppercase tracking-wide flex items-center gap-1.5">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -644,11 +672,16 @@ function IncidentRow({
             <span className="text-xs font-medium text-slate-600">{incident.category}</span>
             {incident.verified && <span className="text-xs text-emerald-600 font-semibold">Verified</span>}
             {isDemo && <DemoBadge compact />}
+            {incident.lat && incident.lng && (
+              <span className="text-[10px] text-slate-400 group-hover:text-red-600 font-mono flex items-center gap-0.5 ml-auto sm:ml-0 transition-colors">
+                <MapPin className="w-2.5 h-2.5 text-red-500" /> Focus on map
+              </span>
+            )}
           </div>
           <p className="text-xs text-slate-700 leading-snug">{incident.description}</p>
         </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span className="font-mono text-xs text-slate-400 tabular-nums">{timeAgo}</span>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()} suppressHydrationWarning>
+          <span className="font-mono text-xs text-slate-400 tabular-nums" suppressHydrationWarning>{timeAgo}</span>
           {responderMode && !incident.verified && !isDemo && (
             <button
               onClick={() => onVerify(incident.id, true)}
