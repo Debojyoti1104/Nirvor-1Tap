@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   applicationName: 'Northeast Connect',
   keywords: ['Northeast India', 'disaster management', 'flood alert', 'landslide', 'emergency', 'ASDMA', 'NDRF', 'offline', 'SOS'],
   authors: [{ name: 'Northeast Connect' }],
-  icons: { icon: '/icon.svg', apple: '/icon.svg' },
+  icons: { icon: '/icon.svg', apple: '/icon-192.png' },
   appleWebApp: {
     capable: true,
     title: 'NE Connect',
