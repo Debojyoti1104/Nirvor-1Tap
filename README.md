@@ -1,267 +1,266 @@
 # 🛡️ NIRVOR-1TAP (Northeast Connect)
-### Community Emergency & Disaster Assistant for North East India
+### Real-Time Community Emergency & Disaster Coordination Platform for North East India
 
-> **An offline-first emergency platform built for the 8 North Eastern states of India.**  
-> Built to keep working when mobile networks collapse, roads get cut off, power fails, and ordinary apps stop working.
-
----
-
-## 🌊 The Reality in North East India
-
-During every monsoon season, North East India faces severe flash floods, landslides, and cloudbursts — from the Brahmaputra valley in Assam to the hills of Meghalaya, Sikkim, and Arunachal Pradesh. 
-
-When a disaster hits, **the first thing that goes down is mobile internet**. 
-
-Most emergency apps today assume you have fast 4G/5G, a charged phone, and Google Maps running smoothly. **In a real flood or landslide, there is no 4G, no cellular data, and no time to fill out complex forms.**
-
-**NIRVOR-1TAP is designed specifically for this reality:**
-- It opens and runs **100% offline** right from your browser.
-- It comes pre-loaded with **3,220+ verified emergency facilities** (hospitals, relief shelters, police, and fire stations) across all 8 NE states.
-- It requires **zero accounts, zero passwords, and zero setup** — anyone can use it in seconds.
-- It costs **₹0 to run** because it uses zero paid APIs (no paid Google Maps, no paid Twilio, no paid cloud fees).
+> **A modern, full-featured civic disaster response platform built for the 8 North Eastern states of India.**  
+> Connects citizens in danger, field rescue teams, relief volunteers, and district authorities in real time — with built-in blackout resilience when cellular towers degrade.
 
 ---
 
-## 🧭 How It Works (At a Glance)
+## 🌊 The Mission in North East India
+
+During every monsoon season, North East India faces severe floods, landslides, and cloudbursts — across the Brahmaputra valley in Assam and the mountainous terrains of Meghalaya, Sikkim, Manipur, Mizoram, Nagaland, Tripura, and Arunachal Pradesh.
+
+When a crisis strikes, people need:
+1. **Immediate 1-tap emergency dispatch** without typing long forms or remembering helpline numbers.
+2. **Real-time visibility** for rescue teams to locate stranded victims and navigate around roadblocks.
+3. **A community relief network** to connect local shelters, drinking water, and rations with families in need.
+4. **Guaranteed reliability** — an app that stays functional and never leaves you stranded with a dead white screen when cell towers degrade.
+
+**NIRVOR-1TAP delivers all of this at ₹0 operating cost**, using modern open-source infrastructure (OpenStreetMap, Leaflet, Open-Meteo, Supabase, Web Audio API).
+
+---
+
+## 🧭 System Flow: From Emergency to Rescue
 
 ```mermaid
 flowchart TD
-    subgraph VictimFlow ["Citizen In Danger"]
-        A["Citizen Opens Site"] --> B["1-Tap [I AM IN DANGER]"]
-        B --> C["Device Captures GPS Offline"]
-        C --> D["Instant 25-Byte SMS to 112"]
-        C --> E["On-Screen Rescue QR Code"]
-        C --> F["Saved in Offline Storage"]
+    subgraph Citizens ["Citizens & Evacuees"]
+        A["Citizen Opens Nirvor-1Tap"] --> B["1-Tap Emergency SOS / Report Hazard"]
+        B --> C["Captures Precise Device GPS"]
+        C --> D["Real-Time Cloud Broadcast"]
     end
 
-    subgraph NetworkFlow ["Automatic Cloud Sync (When Connected)"]
-        F --> G{"Internet Available?"}
-        G -- Yes --> H["Syncs to Supabase Database"]
-        G -- No / Dead Zone --> I["Waits in Offline Outbox"]
-        I -->|"Reconnected"| H
+    subgraph PlatformCore ["Real-Time Cloud & Coordination Core"]
+        D --> E[("Supabase Cloud Database")]
+        E --> F["Live Incident Feed & Map Markers"]
+        E --> G["Relief Board: Needs & Offers"]
+        E --> H["10 km Proximity Radar Engine"]
     end
 
-    subgraph ResponderFlow ["Responders & Rescue Teams"]
-        H --> J["Live Emergency Broadcast"]
-        J --> K{"Victim within 10 km?"}
-        K -- Yes --> L["Screen Alert + Alarm Sound + Vibration"]
-        L --> M["Multi-Victim Triage Radar"]
-        M --> N["1-Tap Google Maps Turn-by-Turn Route"]
+    subgraph Responders ["Field Rescuers, SDRF & NDRF"]
+        H --> I{"Responder within 10 km?"}
+        I -- Yes --> J["Audible Siren + Vibration + Screen Alert"]
+        J --> K["Multi-Victim Triage Radar"]
+        K --> L["1-Tap Google Maps Turn-by-Turn Route"]
+    end
+
+    subgraph BlackoutSafetyNet ["Built-In Blackout Resilience (When Network Fails)"]
+        C -.->|"Cellular Data Dead"| M["Offline Engine Activates"]
+        M -.-> N["25-Byte SMS to 112 / SDRF"]
+        M -.-> O["On-Screen Rescue QR Code"]
+        M -.-> P["3,220+ Pre-Cached Hospitals & Shelters"]
+        M -.-> Q["Local Outbox Auto-Syncs on Reconnection"]
     end
 ```
 
 ---
 
-## 💡 Detailed Walkthrough of Every Feature
+## 💡 Complete Feature Breakdown
 
-### 1. 1-Tap Emergency SOS
-- **What it does**: A single red button for anyone in immediate life danger.
-- **Why it matters**: In a panic, no one can type long paragraphs or remember emergency numbers.
+### 1. 1-Tap Emergency SOS Dispatch
+- **What it does**: A prominent red button that allows anyone in life-threatening danger to summon help in seconds.
+- **Why it matters**: In a flash flood or landslide, there is zero time to create accounts, write descriptions, or browse websites.
 - **How it works**:
-  - Automatically fetches your current GPS coordinates.
-  - Lets you choose your emergency type (Flood, Landslide, Trapped, Medical, Roadblock) and headcount with one tap.
-  - Generates an instant SMS pre-addressed to **112 (National Emergency)** with your exact location and status.
-  - Generates an **offline QR code** on your phone screen. Even if you have zero signal, an SDRF rescuer or boat team can scan your phone to get your coordinates and triage details.
+  - Automatically fetches the victim's high-accuracy GPS coordinates.
+  - 1-tap selection of emergency type (Flood, Landslide, Trapped, Medical, Roadblock) and headcount.
+  - Immediately broadcasts the distress call to the live cloud database and all active field responders in the district.
+  - Pre-fills a native emergency SMS to **112 (National Emergency)** and SDRF as an instant backup.
 
 ---
 
 ### 2. Multi-Victim & Multi-Responder Dispatch Radar
-- **What it does**: A live triage queue for field rescue teams and volunteers managing multiple victims across different flooded areas.
-- **Why it matters**: Disasters never affect just one person. Rescuers need to see all stranded people in their area without messages getting lost.
+- **What it does**: A dedicated tactical command queue for field rescue teams, boat crews, and SDRF personnel.
+- **Why it matters**: Natural disasters rarely affect only one person. Rescuers need a clean, structured triage list to prioritize concurrent rescues across flooded sectors.
 - **How it works**:
-  - Responders turn on **Responder Mode** at the top of the screen.
-  - The app tracks the responder's current location and scans for all nearby distress calls.
-  - A floating **Radar Bubble** shows the total count of active emergency calls.
-  - Clicking the bubble opens the **Triage Dispatch Board**:
-    - Cycle through victims with simple `<` and `>` arrows.
-    - View each victim's distance, severity, headcount, and needs.
-    - Tap **[🧭 NAVIGATE IN GOOGLE MAPS]** to get turn-by-turn driving or boating directions straight to the victim's GPS point.
+  - Responders activate **"Responder Mode"** in the top navigation bar.
+  - The system tracks the responder's live GPS location and continuously scans for distress calls.
+  - A floating **Radar Bubble** displays the total count of active victims in real time.
+  - Clicking the bubble opens the **Multi-Victim Triage Board**:
+    - Interactive carousel (`<` and `>`) to review each stranded victim.
+    - Displays exact coordinates, severity level, victim count, and distance.
+    - One-tap **[🧭 NAVIGATE IN GOOGLE MAPS]** button opens live turn-by-turn driving or boating directions from the responder's current location straight to the victim.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Victim as Stranded Citizen
-    participant App as Nirvor-1Tap
-    participant Cloud as Cloud Database
+    participant App as Nirvor-1Tap App
+    participant DB as Cloud Database
     participant Radar as 10km Radar Engine
-    actor Rescuer as Boat / NDRF Team
+    actor Rescuer as Boat Crew / NDRF
 
     Victim->>App: Taps [I AM IN DANGER]
-    App->>App: Encodes coordinates (e.g. 26.1445, 91.7362)
-    App->>Cloud: Broadcasts SOS signal
-    Cloud->>Radar: Delivers to active responders
-    Radar->>Radar: Detects victim is 3.5 km away (under 10 km)
-    Radar->>Rescuer: Sounds audible alarm + screen alert
-    Rescuer->>App: Taps [Open in Google Maps]
-    App->>Rescuer: Opens live navigation route to victim
+    App->>DB: Posts live emergency coordinates
+    DB->>Radar: Delivers distress signal
+    Radar->>Radar: Calculates distance (e.g. 3.2 km <= 10 km)
+    Radar->>Rescuer: Triggers screen alert + chime + vibration
+    Rescuer->>App: Taps [Navigate in Google Maps]
+    App->>Rescuer: Launches turn-by-turn route to victim's location
 ```
 
 ---
 
-### 3. 10 km Danger Alert with Sound & Vibration
-- **What it does**: Automatically alerts field responders whenever an emergency SOS is sent within a 10 km radius.
-- **Why it matters**: Responders driving in heavy rain or navigating flood currents cannot keep staring at their phone screen. They need clear audio and tactile alerts.
+### 3. 10 km Proximity Radar Alert (Acoustic & Tactile)
+- **What it does**: Automatically alerts field responders whenever an emergency SOS is triggered within a 10 km radius.
+- **Why it matters**: Responders driving through torrential rain or operating inflatable boats cannot stare at a screen. They need loud audio and physical vibration to grab their attention.
 - **How it works**:
-  - Calculates the real-world distance between the responder and the emergency using the Haversine formula.
-  - If the emergency is within 10 km:
-    - **Sound**: Plays a two-tone alarm synthesized directly in the browser via the Web Audio API. **It doesn't download any sound files**, so it works without internet!
-    - **Vibration**: Vibrates mobile devices in an emergency cadence.
-    - **Visual**: Displays a full-screen red alert banner with the emergency type and distance.
-    - **Notifications**: Sends a native system notification if the browser is in the background.
+  - Automatically calculates real-time ground distance to active incidents using the Haversine formula.
+  - When an emergency occurs within 10 km:
+    - **Acoustic**: Synthesizes a loud two-tone siren directly in the browser via the Web Audio API. Because the sound is generated programmatically in code, it never depends on downloading external MP3 files!
+    - **Tactile**: Triggers hardware vibration patterns on mobile phones (`navigator.vibrate`).
+    - **Visual**: Drops an emergency banner across the screen with victim distance and category.
+    - **System Notification**: Fires native OS notifications if the browser is minimized.
 
 ---
 
-### 4. Interactive Emergency Map
-- **What it does**: A complete interactive map showing facilities, hazards, roadblocks, and live distress calls.
-- **Why it matters**: Visual awareness is essential to plan safe evacuation routes and avoid submerged roads.
+### 4. Live Interactive Disaster Map
+- **What it does**: A dynamic disaster map displaying verified emergency facilities, reported road hazards, and live distress calls.
+- **Why it matters**: Visual situational awareness helps citizens choose safe evacuation paths and helps rescue teams avoid submerged roads.
 - **How it works**:
-  - **Base Layer Choices**: 1-tap toggle between **Street** (roads & landmarks), **Terrain** (elevation contours for landslide risk), and **Satellite** (real aerial views to check river overflow).
-  - **Filter Layers**: Toggle views for Hospitals, Shelters, Police, Fire Stations, or Incidents.
-  - **Smart De-clustering**: If multiple reports happen in the same town or hub, the map gently fans them out radially so every single pin is visible and clickable.
-  - **Distinct Category Icons**:
-    - 🪨 **Landslide** (Amber pin)
-    - 🌊 **Flood** (Blue pin)
-    - 🚧 **Roadblock** (Orange pin)
-    - ⚡ **Power Outage** (Yellow pin)
-    - 🚑 **Medical Emergency** (Red pin)
-    - 🚨 **Life Threat SOS** (Pulsing Red pin)
-  - **1-Tap Focus**: Clicking any incident in the Active Incidents feed smoothly flies the map directly to that location at zoom 15 and opens its interactive popup.
-  - **Fit All Incidents**: Clicking the "Incidents" filter button automatically zooms to fit all active incident pins on the screen at once.
+  - **Base Layer Switcher**: 1-tap switching between **Street** (road layout), **Terrain** (topographic contours for landslide risk), and **Satellite** (real aerial imagery to view river embankments).
+  - **Layer Filtering**: Filter markers by All Layers, Hospitals & Clinics, Shelters, Police, Fire & Rescue, and Active Incidents.
+  - **Smart De-clustering**: If multiple reports happen at the same town or hub, the map gently fans them out radially so every marker is clearly visible and clickable.
+  - **Category-Specific Map Icons**:
+    - 🪨 **Landslide** (Amber teardrop pin `#D97706`)
+    - 🌊 **Flood** (Blue teardrop pin `#2563EB`)
+    - 🚧 **Roadblock** (Orange teardrop pin `#EA580C`)
+    - ⚡ **Power Outage** (Yellow teardrop pin `#CA8A04`)
+    - 🚑 **Medical Emergency** (Red teardrop pin `#DC2626`)
+    - 🚨 **Life-Threatening SOS** (Pulsing Red pin `#DC2626`, 32px)
+  - **1-Tap Focus**: Clicking any incident in the "Active Incidents" list smoothly flies the map directly to that location at zoom 15, highlights the marker, and opens its popup.
+  - **Auto-Fit Bounds**: Clicking the "Incidents" filter automatically zooms to frame all active incidents across the state.
 
 ---
 
-### 5. 3,220+ Pre-Loaded Offline Emergency Facilities
-- **What it does**: A massive built-in directory of **3,220 verified emergency facilities** covering Assam, Arunachal Pradesh, Manipur, Meghalaya, Mizoram, Nagaland, Sikkim, and Tripura.
-- **Why it matters**: If network towers go down, you cannot search Google for the nearest hospital or relief camp.
+### 5. Real-Time Community Incident Reporting
+- **What it does**: Allows local residents and ward volunteers to crowdsource real-time reports of road washouts, rising water levels, fallen trees, or broken bridges.
+- **Why it matters**: Official disaster reports often take hours or days to compile. People living on the ground spot dangers first.
 - **How it works**:
-  - Saved directly on the user's device via Service Worker cache (`/public/data/facilities.json`).
-  - Includes:
-    - 🏥 **Hospitals & Clinics**: Complete address, phone numbers, and emergency departments.
-    - ⛺ **Evacuation Shelters & Relief Camps**: Capacity, current occupancy, and camp manager contacts.
-    - 🚓 **Police Stations & Border Outposts**: Landline numbers and jurisdiction.
-    - 🚒 **Fire & Rescue Stations**: Rapid dispatch numbers.
-  - Every facility popup includes a direct Google Maps directions button and an offline `geo:` navigation link.
+  - Select category, severity (Low, Moderate, High, Critical), State, and Hub.
+  - Attach live GPS coordinates or select the general hub neighborhood.
+  - **Instant Local Update**: The report immediately appears on the user's map and feed without waiting for server response.
+  - **Cloud Sync**: Syncs to Supabase so all other connected users and authorities see the update within seconds.
 
 ---
 
-### 6. Real-Time Community Incident Reporting
-- **What it does**: Allows local residents and ward volunteers to report newly spotted road blocks, landslides, broken power lines, or rising water.
-- **Why it matters**: Official government assessments often take hours. People living near the riverbank spot rising water first.
+### 6. Dual-Sided Community Relief Board (Mutual Aid)
+- **What it does**: A community mutual-aid board connecting people who need relief supplies with volunteers and NGOs offering them.
+- **Why it matters**: Centralized relief often gets bottlenecked. Nearby gurudwaras, clubs, and residents often have dry rations, clean drinking water, or boats ready to deploy if they know where to go.
 - **How it works**:
-  - Select category, severity, state, and district hub.
-  - Optionally attach live GPS coordinates or use the hub center.
-  - **Instant Local Display**: The report appears on your map and feed immediately without waiting for server confirmation.
-  - **Offline Queue**: If there is no internet, the report waits in your device's outbox and syncs to the cloud automatically the second internet is restored.
+  - **"I Need Help"**: Request drinking water, food packets, emergency medicines, rescue boats, or report missing persons.
+  - **"I Want to Help"**: Post available resources (e.g. "We have 300 drinking water packets and 1 generator at Panbazar").
+  - **Zero Login Friction**: No accounts or passwords required — anyone can post in under 20 seconds.
+  - **Lifecycle Tracking**: Posts update from `Open` $\rightarrow$ `Claimed` $\rightarrow$ `Fulfilled` to prevent duplicated effort.
 
 ---
 
-### 7. Community Relief Board (Mutual Aid)
-- **What it does**: Connects people who need help with neighbors, NGOs, and volunteers who want to give help.
-- **Why it matters**: Centralized relief often gets delayed. Local community groups and volunteers with boats or food can step in immediately if they know who needs what.
+### 7. Real-Time Weather Risk Engine & Advisory Score
+- **What it does**: Automatically computes a real-time Disaster Risk Score (0 to 100) and advisory alert for each district.
+- **Why it matters**: Gives citizens proactive warning before rivers overflow or slopes give way.
 - **How it works**:
-  - **"I Need Help"**: Request drinking water, food packets, emergency medicines, rescue boats, or report missing family members.
-  - **"I Want to Help"**: Volunteers and NGOs list what resources they have available (e.g., "We have 200 food packets and 1 generator at Silchar").
-  - **No Accounts Required**: No logins or passwords needed. Anyone can post in under 20 seconds.
-  - **Status Tracking**: Posts update from `Open` $\rightarrow$ `Claimed` $\rightarrow$ `Fulfilled` to prevent wasted relief efforts.
+  - Connects to Open-Meteo REST API (completely free, zero API keys required).
+  - Analyzes hourly rainfall rate, 24-hour total accumulation, and wind speed.
+  - Tailored specifically to North East India's geography:
+    - *Valleys (Assam)*: Weighted for 24-hour cumulative rainfall (river flooding).
+    - *Hills (Meghalaya, Sikkim, Arunachal)*: Weighted for sudden high-intensity bursts (flash floods & landslides).
+  - Simple 4-tier risk status:
+    - 🟢 **LOW (0-29)**: Normal conditions.
+    - 🟡 **MODERATE (30-59)**: Heavy rain expected; stay alert.
+    - 🟠 **HIGH (60-79)**: Flood risk high; prepare emergency kits.
+    - 🔴 **CRITICAL (80-100)**: Immediate evacuation warning.
 
 ---
 
-### 8. Live Weather Risk Engine & Advisory Score
-- **What it does**: Computes an automatic real-time Disaster Risk Index (from 0 to 100) for every hub in North East India.
-- **Why it matters**: Gives people clear early warnings before rivers breach their banks.
+### 8. 🛡️ Built-In Blackout Resilience & Offline Safety Net (Feature Highlight)
+- **What it does**: A built-in offline engine that prevents the platform from crashing or becoming useless when cellular internet towers collapse during severe floods or landslides.
+- **Why it matters**: While Nirvor-1Tap is primarily a real-time cloud coordination platform, natural disasters frequently destroy cellular data towers. Normal websites show a dead white screen; Nirvor-1Tap seamlessly activates its offline fallback toolkit.
 - **How it works**:
-  - Pulls live weather data from Open-Meteo (completely free, zero API keys required).
-  - Analyzes rainfall rate, 24-hour total accumulation, and wind speed.
-  - Uses geography-specific formulas:
-    - *Plains (Assam, valleys)*: Weighted for 24-hour cumulative rainfall (river flooding).
-    - *Hills (Meghalaya, Sikkim, Arunachal)*: Weighted for sudden high-intensity bursts (landslides & flash floods).
-  - Shows simple color-coded risk levels:
-    - 🟢 **LOW (0-29)**: Conditions normal.
-    - 🟡 **MODERATE (30-59)**: Heavy rain; watch low-lying spots.
-    - 🟠 **HIGH (60-79)**: Flood risk high; pack emergency supplies.
-    - 🔴 **CRITICAL (80-100)**: Evacuate to high ground immediately.
+  - **100% Offline PWA Shell**: Registered Service Worker (`public/sw.js`) caches the entire platform shell so it opens instantly even with zero internet.
+  - **3,220+ Pre-Cached Facilities**: The complete database of **3,220 verified hospitals, clinics, police stations, and relief shelters** across all 8 NE states is stored locally on the device (`facilities.json`).
+  - **2G SMS Channel Fallback**: When mobile data is dead but basic 2G voice/SMS channels still operate, the SOS modal pre-fills a native 25-byte SMS packet to **112 (National Emergency)** with exact GPS coordinates.
+  - **On-Screen Rescue QR Code**: For complete cellular blackouts (0G), the app generates an on-screen QR code containing the victim's triage status and coordinates. Arriving rescue boats or helicopters can scan it directly with their camera with zero network needed.
+  - **Store-and-Forward Outbox**: Any hazard reports or relief posts written while offline are saved in `localStorage`. The second your device reconnects to a signal, the app automatically flushes the queue to the cloud.
 
 ---
 
 ### 9. Ultra Low-Bandwidth & High-Contrast Emergency Modes
-- **What it does**: Two purpose-built modes for tough physical conditions.
+- **What it does**: Two specialized operating modes for difficult physical environments.
 - **Why it matters**:
-  - **Low-Bandwidth Mode**: Hides tile maps and heavy assets. Uses under **5 KB** of data — perfect for weak 2G signals or saving phone battery.
-  - **High-Contrast Emergency Mode**: Boosts font sizes by 25%, turns borders high-contrast, and enlarges touch targets for elderly citizens or when viewing screens in blinding rain or pitch-black darkness.
+  - **Low-Bandwidth Mode**: Hides tile maps and heavy assets. Reduces data consumption to **under 5 KB** — ideal for weak 2G signals or preserving critical phone battery.
+  - **High-Contrast Emergency Mode**: Boosts font sizes by 25%, adds high-contrast borders, and enlarges touch targets for elderly citizens or people viewing screens in torrential rain or pitch-black darkness.
 
 ---
 
 ### 10. 4 Regional Languages
-- **What it does**: Full language switcher supporting:
+- **What it does**: Instant language switcher for:
   - 🇬🇧 **English**
   - 🇮🇳 **Assamese (অসমীয়া)**
   - 🇮🇳 **Bengali (বাংলা)**
   - 🇮🇳 **Hindi (हिन्दी)**
-- **Why it matters**: During an emergency, instructions must be crystal clear in the local mother tongue.
+- **Why it matters**: In an emergency, safety instructions and button labels must be understood immediately in the local mother tongue.
 
 ---
 
-### 11. Offline Emergency Helplines & Checklists
-- **What it does**: 1-tap call buttons for all emergency services and actionable safety checklists.
-- **Why it matters**: When power is out and internet is gone, you cannot Google the SDRF control room number.
+### 11. Emergency Helplines & Survival Checklists
+- **What it does**: 1-tap dialer for essential emergency helplines and interactive offline safety checklists.
+- **Why it matters**: During a power cut or crisis, you cannot search the web for control room contact numbers.
 - **How it works**:
-  - Pre-programmed direct phone links for **112, 108 (Ambulance), 101 (Fire), 100 (Police), 1070/1077 (Disaster Management)**, and state-specific control rooms for all 8 states.
-  - Step-by-step interactive checklists for **Flood Prep, Landslide Safety, and Earthquake Response** that you can check off on your screen offline.
+  - Direct 1-tap call buttons (`tel:`) for **112, 108 (Ambulance), 101 (Fire), 100 (Police), 1070/1077 (Disaster Helplines)**, NDRF battalions, and state control rooms for all 8 states.
+  - Actionable checklists for **Flood Preparedness, Landslide Safety, and Earthquake Response** that can be checked off on-screen anytime.
 
 ---
 
 ## 🏗️ Technology Stack
 
-| Component | Technology | Why It Was Chosen |
+| Layer | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Framework** | **Next.js 16 (App Router)** | Fast server-side rendering, static page export, and clean API routes. |
-| **UI Library** | **React 19 + Tailwind CSS v4** | Lightweight, responsive, and high performance on budget mobile phones. |
-| **Maps** | **Leaflet + OpenStreetMap** | Free, open-source, and works without API keys or credit cards. |
-| **Offline Cache** | **Service Worker (`public/sw.js`)** | Pre-caches the app shell and 3,220 facilities for 100% offline use. |
-| **Database** | **Supabase (PostgreSQL REST)** | Fast cloud database with automatic fallback to memory/localStorage. |
-| **Emergency Chime** | **Web Audio API** | Generates sound via browser code — zero audio files to download. |
-| **Weather** | **Open-Meteo REST API** | Completely free open-source weather telemetry. |
+| **Framework** | **Next.js 16 (App Router)** | High-performance server rendering, static optimization, and API routes. |
+| **Frontend** | **React 19 + Tailwind CSS v4** | Lightweight, responsive interface optimized for budget mobile devices. |
+| **Mapping** | **Leaflet + OpenStreetMap** | Open-source interactive map without proprietary SDK locks or API charges. |
+| **Cloud Database** | **Supabase (PostgreSQL REST)** | Real-time cloud persistence with automatic fallback to memory. |
+| **Blackout Engine** | **Service Worker (`public/sw.js`)** | Caches app shell, facilities database, and manages offline outbox sync. |
+| **Sound Synthesis** | **Web Audio API** | Generates emergency siren programmatically in browser code (zero MP3 downloads). |
+| **Weather Telemetry** | **Open-Meteo REST API** | Completely free open-source meteorological data (zero API keys). |
 
 ---
 
 ## 🚀 How to Deploy on Vercel (Under 2 Minutes)
 
-1. Go to [https://vercel.com/new](https://vercel.com/new).
-2. Select your repository: **`Debojyoti1104/Nirvor-1Tap`**.
+1. Open [https://vercel.com/new](https://vercel.com/new).
+2. Import your GitHub repository: **`Debojyoti1104/Nirvor-1Tap`**.
 3. Vercel automatically detects the framework as **Next.js**.
 4. In **Environment Variables**, add:
    - `NEXT_PUBLIC_SUPABASE_URL` = `https://zhhnjscexviylbjudwrh.supabase.co`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = *(your Supabase publishable key)*
-   - `SUPABASE_SERVICE_ROLE_KEY` = *(your Supabase secret service-role key)*
-5. Click **Deploy**. Your site will be live with HTTPS and global CDN in about 60 seconds!
-
-*(Note: If you run without Supabase keys, Nirvor-1Tap still works seamlessly using its built-in in-memory engine and offline cache).*
+   - `SUPABASE_SERVICE_ROLE_KEY` = *(your Supabase service role key)*
+5. Click **Deploy**. Your site will be live with HTTPS and global CDN distribution in about 60 seconds!
 
 ---
 
 ## 💻 Running Locally
 
 ```bash
-# 1. Clone repo
+# 1. Clone repository
 git clone https://github.com/Debojyoti1104/Nirvor-1Tap.git
 cd Nirvor-1Tap
 
-# 2. Install packages
+# 2. Install dependencies
 npm install
 
 # 3. Start development server
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🌟 Why This Actually Works in the Real World
+## 🌟 Why This Architecture Works
 
-1. **Failure-Proof Architecture**: If the internet dies, the app still opens, shows 3,220 hospitals, allows 1-tap SMS calls to 112, and displays scannable QR rescue codes.
-2. **Zero Operating Cost**: Designed for civic bodies, NGOs, and student rescue clubs — no costly monthly bills for maps or SMS gateways.
-3. **Built for Real Human Stress**: No logins, no passwords, no ads, big touch buttons, high contrast, and 4 local languages.
+1. **Active Real-Time Cloud**: Delivers instant cloud updates, live map sync, mutual-aid relief boards, and 10 km responder radar when connected.
+2. **Guaranteed Blackout Safety Net**: When floods destroy cell towers, the platform seamlessly falls back to 2G SMS, scannable QR codes, 3,220 pre-cached hospitals, and automatic outbox sync.
+3. **Zero Financial Overhead**: Built entirely on free, open infrastructure — scalable by district authorities and civic groups at ₹0 software cost.
+4. **Human-Centered Civic Design**: Zero accounts required, large touch targets, high contrast, and 4 regional languages.
 
 ---
 
