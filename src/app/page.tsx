@@ -433,38 +433,52 @@ export default function HomePage() {
         </button>
 
         {/* Action bar */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex border border-slate-200 rounded-lg overflow-hidden bg-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          {/* Tabs */}
+          <div className="flex border border-slate-200 rounded-lg overflow-hidden bg-white shadow-xs w-full sm:w-auto">
             {(Object.keys(TAB_LABELS) as ActiveTab[]).map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`text-xs font-semibold px-3 py-2 transition-colors ${activeTab === tab ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+                className={`flex-1 sm:flex-none text-xs font-semibold px-3.5 py-2 transition-colors text-center ${activeTab === tab ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
                 {TAB_LABELS[tab]}
               </button>
             ))}
           </div>
-          <div className="flex-1" />
-          <button onClick={handleToggleResponderMode}
-            className={`flex items-center gap-1.5 text-xs font-semibold border px-3 py-2 rounded-lg transition-colors ${responderMode ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'}`}
-            title="Responder view: verify community reports">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Responder</span>
-          </button>
-          <button onClick={() => setEmergencyMode(p => !p)}
-            className={`lg:hidden notranslate flex items-center gap-1.5 text-xs font-semibold border px-3 py-2 rounded-lg transition-colors ${emergencyMode ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'}`}
-            title="Emergency mode: larger text, higher contrast"
-            aria-pressed={emergencyMode}>
-            <Accessibility className="w-3.5 h-3.5" />
-            <span className="sr-only">Emergency mode</span>
-          </button>
-          <button onClick={() => setReporterOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-3 py-2 rounded-lg transition-colors">
-            <Plus className="w-3.5 h-3.5" />
-            Report Incident
-          </button>
-          <button onClick={() => setSosOpen(true)}
-            className="sm:hidden flex items-center gap-1 text-xs font-bold bg-red-600 text-white px-3 py-2 rounded-lg">
-            <Zap className="w-3.5 h-3.5" /> SOS
-          </button>
+
+          {/* Action buttons (Cleanly aligned on mobile & desktop) */}
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            <button
+              onClick={handleToggleResponderMode}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 text-xs font-bold border px-3 py-2 rounded-lg transition-all shadow-xs ${
+                responderMode
+                  ? 'bg-blue-600 border-blue-700 text-white shadow-sm ring-2 ring-blue-300'
+                  : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+              }`}
+              title="Responder view: live GPS radar and verify reports"
+            >
+              <ShieldCheck className={`w-4 h-4 ${responderMode ? 'text-white' : 'text-blue-600'}`} />
+              <span className="whitespace-nowrap">Responder {responderMode ? 'ON' : ''}</span>
+            </button>
+
+            <button
+              onClick={() => setReporterOpen(true)}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-3 py-2 rounded-lg transition-colors shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5 text-slate-500" />
+              <span className="whitespace-nowrap">Report Incident</span>
+            </button>
+
+            <button
+              onClick={() => setEmergencyMode(p => !p)}
+              className={`lg:hidden notranslate flex items-center justify-center gap-1 text-xs font-semibold border px-2.5 py-2 rounded-lg transition-colors shadow-xs ${
+                emergencyMode ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+              }`}
+              title="Emergency mode: larger text, higher contrast"
+              aria-pressed={emergencyMode}
+            >
+              <Accessibility className="w-3.5 h-3.5" />
+              <span className="sr-only">Emergency mode</span>
+            </button>
+          </div>
         </div>
 
         {/* Tab content */}
