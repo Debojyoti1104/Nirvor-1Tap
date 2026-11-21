@@ -56,6 +56,15 @@ const INCIDENT_COLORS: Record<string, string> = {
   'Medical Emergency': '#DB2777',
 }
 
+const INCIDENT_SYMBOLS: Record<string, string> = {
+  Flood: '🌊',
+  Landslide: '🪨',
+  Roadblock: '🚧',
+  'Power Outage': '⚡',
+  Earthquake: '🏚️',
+  'Medical Emergency': '🚑',
+}
+
 const FACILITY_STYLES: Record<string, { color: string; sym: string; label: string }> = {
   hospital:  { color: '#DC2626', sym: '✚', label: 'Hospital' },
   clinic:    { color: '#F43F5E', sym: '✚', label: 'Clinic' },
@@ -93,15 +102,22 @@ export default function EmergencyMap({
       if (activeFilter !== 'all' && activeFilter !== 'incident') {
         setActiveFilter('all')
       }
-      map.flyTo([targetIncident.lat, targetIncident.lng], 15, {
+      const targetLatLng = marker ? marker.getLatLng() : [targetIncident.lat, targetIncident.lng]
+      map.flyTo(targetLatLng, 15, {
         animate: true,
-        duration: 1.2,
+        duration: 1.0,
       })
-      setTimeout(() => {
+      if (marker) {
+        marker.setZIndexOffset(1000)
+        marker.openPopup()
+      }
+      const timer = setTimeout(() => {
         if (marker) {
+          marker.setZIndexOffset(1000)
           marker.openPopup()
         }
       }, 500)
+      return () => clearTimeout(timer)
     }
   }, [focusedIncidentId, incidents, activeFilter])
 
@@ -181,6 +197,17 @@ export default function EmergencyMap({
 
       // ── Incidents Rendering (with 10km Danger Radius & Top Direction Button) ──
       if (activeFilter === 'all' || activeFilter === 'incident') {
+        // Group incidents by coordinate to disperse identical/stacked markers
+        const coordCounts: Record<string, number> = {}
+        const coordIndices: Record<string, number> = {}
+
+        incidents.forEach(inc => {
+          if (inc.lat != null && inc.lng != null) {
+            const key = `${inc.lat.toFixed(4)},${inc.lng.toFixed(4)}`
+            coordCounts[key] = (coordCounts[key] ?? 0) + 1
+          }
+        })
+
         incidents.forEach(inc => {
           if (!inc.lat || !inc.lng) return
           const isDanger =
@@ -190,6 +217,22 @@ export default function EmergencyMap({
             inc.description.includes('DANGER')
 
           const color = isDanger ? '#DC2626' : (INCIDENT_COLORS[inc.category] ?? '#6B7280')
+          const sym = isDanger ? '🚨' : (INCIDENT_SYMBOLS[inc.category] ?? '!')
+
+          // De-collide stacked markers sharing exact coordinate (e.g. hub default location)
+          const key = `${inc.lat.toFixed(4)},${inc.lng.toFixed(4)}`
+          const count = coordCounts[key] ?? 1
+          let renderLat = inc.lat
+          let renderLng = inc.lng
+
+          if (count > 1) {
+            const index = coordIndices[key] ?? 0
+            coordIndices[key] = index + 1
+            const angle = (index * 2 * Math.PI) / count
+            const radius = 0.003
+            renderLat = inc.lat + Math.sin(angle) * radius
+            renderLng = inc.lng + Math.cos(angle) * (radius * 1.2)
+          }
 
           // 10km Danger Radius Circle for critical emergency broadcasts
           if (isDanger) {
@@ -214,7 +257,7 @@ export default function EmergencyMap({
           const geoUri = getNativeGeoUri(inc.lat, inc.lng, `Emergency: ${inc.category}`)
 
           // Top direction button inside the popup for responders
-          const marker = L.marker([inc.lat, inc.lng], { icon: createIcon(color, isDanger ? '🚨' : '!', isDanger ? 32 : 24) })
+          const marker = L.marker([renderLat, renderLng], { icon: createIcon(color, sym, isDanger ? 32 : 26) })
             .bindPopup(`<div style="font-family:sans-serif;min-width:240px;padding:2px">
               <!-- DIRECTION BUTTON ON TOP OF MESSAGE -->
               <div style="margin-bottom:8px">
@@ -223,7 +266,7 @@ export default function EmergencyMap({
                 </a>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                <span style="background:${color};color:white;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700">${inc.category}</span>
+                <span style="background:${color};color:white;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700">${sym} ${inc.category}</span>
                 <span style="background:#F1F5F9;color:#475569;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600">${inc.severity}</span>
               </div>
               <div style="font-size:12px;color:#0F172A;line-height:1.4;margin-bottom:6px">${inc.description}</div>
