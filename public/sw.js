@@ -1,6 +1,11 @@
 /* Northeast Connect service worker — offline-first emergency shell. */
-const VERSION = 'nc-v2'
-const SHELL = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png']
+const VERSION = 'nc-v3'
+const SHELL = [
+  '/',
+  '/manifest.webmanifest',
+  '/nirvor_logo.png',
+  '/data/facilities.json',
+]
 const TILE_HOSTS = [
   'tile.openstreetmap.org',
   'tile.opentopomap.org',

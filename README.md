@@ -135,20 +135,30 @@ alter table public.incidents enable row level security;
 alter table public.relief_posts enable row level security;
 ```
 
-4. Open **Project Settings → API** and copy:
+4. Copy two values from **Project Settings → API** (or the **Connect** screen):
    - **Project URL** (e.g. `https://abcdefgh.supabase.co`)
-   - **service_role** secret key
+   - the **secret** key:
+     - new projects: `sb_secret_...` (**SECRET_KEY**)
+     - older projects: the **service_role** JWT (`eyJ...`)
+   - Do **not** use the publishable / anon key — RLS is enabled with no client policies.
 5. Create `.env.local` in the project root:
 
 ```env
 SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SECRET_KEY=sb_secret_your-secret-key
+```
+
+   If your project still uses legacy keys, this also works:
+
+```env
+SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...your-service-role-key
 ```
 
 6. Restart the server and open `/api/incidents`. You should see `"database": true`.
    The footer will change from *Session sync* to **Supabase sync active**.
 
-> **Security note:** `SUPABASE_SERVICE_ROLE_KEY` is server-only because all writes go through `/api/*` route handlers. Never rename it to `NEXT_PUBLIC_*`.
+> **Security note:** both key names are server-only because all writes go through `/api/*` route handlers. Never rename them to `NEXT_PUBLIC_*`.
 
 ---
 

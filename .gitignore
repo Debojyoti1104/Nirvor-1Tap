@@ -8,3 +8,17 @@ out/
 Thumbs.db
 
 tsconfig.tsbuildinfo
+
+# Large transcript logs & secret leaks
+hackathon-site-improvement-ideas.json
+
+# Markdown files other than README.md
+*.md
+!README.md
+
+# Non-essential scripts (.mjs)
+test-overpass.mjs
+scripts/*.mjs
+
+# Root raw logo (cleanly copied to public/nirvor_logo.png)
+/nirvor_logo.png

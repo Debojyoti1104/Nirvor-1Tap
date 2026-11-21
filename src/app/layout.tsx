@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   applicationName: 'Nirvor-1Tap',
   keywords: ['Northeast India', 'disaster management', 'flood alert', 'landslide', 'emergency', 'ASDMA', 'NDRF', 'offline', 'SOS'],
   authors: [{ name: 'Nirvor-1Tap' }],
-  icons: { icon: '/icon.svg', apple: '/icon-192.png' },
+  icons: { icon: '/nirvor_logo.png', apple: '/nirvor_logo.png' },
   appleWebApp: {
     capable: true,
     title: 'Nirvor-1Tap',

@@ -141,6 +141,19 @@ export async function submitIncident(input: NewIncidentInput): Promise<{ synced:
     verified: false,
     reporterType: 'community',
   }
+
+  // 1. Immediate optimistic local cache write so offline reads have it instantly
+  try {
+    const cached = readCache<Incident[]>(CACHE_INCIDENTS) ?? []
+    writeCache(CACHE_INCIDENTS, [incident, ...cached.filter((i) => i.id !== incident.id)])
+  } catch {
+    /* ignore */
+  }
+
+  // 2. Broadcast change to all local tabs immediately
+  broadcastChange()
+
+  // 3. Persist to API / Supabase
   try {
     const res = await fetch('/api/incidents', {
       method: 'POST',
@@ -149,7 +162,15 @@ export async function submitIncident(input: NewIncidentInput): Promise<{ synced:
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = (await res.json()) as { incident?: Incident }
-    return { synced: true, incident: data.incident ?? incident }
+    const saved = data.incident ?? incident
+    try {
+      const cached = readCache<Incident[]>(CACHE_INCIDENTS) ?? []
+      writeCache(CACHE_INCIDENTS, [saved, ...cached.filter((i) => i.id !== saved.id && i.id !== incident.id)])
+    } catch {
+      /* ignore */
+    }
+    broadcastChange()
+    return { synced: true, incident: saved }
   } catch {
     enqueue('incident', incident as unknown as Record<string, unknown>)
     return { synced: false, incident }
@@ -188,6 +209,18 @@ export async function submitRelief(input: NewReliefInput): Promise<{ synced: boo
     status: 'open',
     createdAt: new Date().toISOString(),
   }
+
+  // 1. Immediate optimistic local cache write so offline reads have it instantly
+  try {
+    const cached = readCache<ReliefPost[]>(CACHE_RELIEF) ?? []
+    writeCache(CACHE_RELIEF, [post, ...cached.filter((p) => p.id !== post.id)])
+  } catch {
+    /* ignore */
+  }
+
+  // 2. Broadcast change to all local tabs immediately
+  broadcastChange()
+
   try {
     const res = await fetch('/api/relief', {
       method: 'POST',
@@ -196,7 +229,15 @@ export async function submitRelief(input: NewReliefInput): Promise<{ synced: boo
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = (await res.json()) as { post?: ReliefPost }
-    return { synced: true, post: data.post ?? post }
+    const saved = data.post ?? post
+    try {
+      const cached = readCache<ReliefPost[]>(CACHE_RELIEF) ?? []
+      writeCache(CACHE_RELIEF, [saved, ...cached.filter((p) => p.id !== saved.id && p.id !== post.id)])
+    } catch {
+      /* ignore */
+    }
+    broadcastChange()
+    return { synced: true, post: saved }
   } catch {
     enqueue('relief', post as unknown as Record<string, unknown>)
     return { synced: false, post }

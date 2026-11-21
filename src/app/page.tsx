@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import {
   Radio, Zap, ChevronDown, Plus, List, MapPin,
-  HeartHandshake, ShieldCheck, Accessibility, Languages,
+  HeartHandshake, ShieldCheck, Accessibility, Languages, Navigation,
 } from 'lucide-react'
-import type { Hub, Incident, ReliefKind, ReliefPost, RiskAssessment, WeatherData } from '@/types'
+import type { Hub, Incident, ReliefKind, ReliefPost, RiskAssessment, WeatherData, Facility } from '@/types'
 import {
   NE_HUBS, NE_STATES, DEFAULT_HUB,
   getFacilitiesByHub, getHubsByState, MOCK_INCIDENTS_BY_HUB,
@@ -15,6 +15,9 @@ import { fetchWeatherData, computeRiskAssessment } from '@/lib/riskEngine'
 import {
   broadcastChange, fetchIncidents, fetchRelief, setIncidentVerified,
 } from '@/lib/community'
+import { getGoogleMapsDirectionsUrl } from '@/lib/geoUtils'
+import ResponderDangerBubble from '@/components/ResponderDangerBubble'
+import ResponderNotificationAlert from '@/components/ResponderNotificationAlert'
 import BrandLogo from '@/components/BrandLogo'
 import TelemetryStrip from '@/components/TelemetryStrip'
 import AlertBar from '@/components/AlertBar'
@@ -75,6 +78,84 @@ export default function HomePage() {
   const [relief, setRelief] = useState<ReliefPost[]>([])
   const [syncStatus, setSyncStatus] = useState<'supabase' | 'memory' | 'offline'>('offline')
   const [responderMode, setResponderMode] = useState(false)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [allFacilities, setAllFacilities] = useState<Facility[]>([])
+
+  // ── Auto-fetch Offline/Online GPS Coordinates ─────────────────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) return
+
+    // 1. Instant cached GPS fallback
+    try {
+      const stored = localStorage.getItem('nc_last_gps')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed?.lat && parsed?.lng) {
+          setUserLocation({ lat: parsed.lat, lng: parsed.lng })
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
+    // 2. Hardware GPS acquisition
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setUserLocation(loc)
+        try {
+          localStorage.setItem('nc_last_gps', JSON.stringify({ ...loc, time: Date.now() }))
+        } catch {
+          /* ignore */
+        }
+      },
+      () => {
+        // Fallback to low-power / cached
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+            setUserLocation(loc)
+          },
+          () => console.log('Location unavailable, using hub fallback'),
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
+        )
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    )
+  }, [])
+
+  // ── Real-time GPS tracking when Responder Mode is active ──────────────────
+  useEffect(() => {
+    if (!responderMode || typeof window === 'undefined' || !('geolocation' in navigator)) return
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setUserLocation(loc)
+        try {
+          localStorage.setItem('nc_last_gps', JSON.stringify({ ...loc, time: Date.now() }))
+        } catch {
+          /* ignore */
+        }
+      },
+      (err) => console.warn('Responder GPS watch error', err),
+      { enableHighAccuracy: true, maximumAge: 15000 }
+    )
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [responderMode])
+
+  // ── Load 3,220+ Emergency Facilities from facilities.json ─────────────────
+  useEffect(() => {
+    let mounted = true
+    fetch('/data/facilities.json')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (mounted && Array.isArray(d?.facilities)) {
+          setAllFacilities(d.facilities)
+        }
+      })
+      .catch(e => console.warn('Facilities fetch fallback', e))
+    return () => { mounted = false }
+  }, [])
 
   // ── Accessibility / emergency mode ───────────────────────────────────────
   useEffect(() => {
@@ -151,9 +232,26 @@ export default function HomePage() {
   }
 
   const handleIncidentSubmit = (incident: Incident) => {
-    setServerIncidents(prev => prev.some(i => i.id === incident.id) ? prev : [incident, ...prev])
+    const hub = NE_HUBS.find(h => h.id === incident.hubId)
+    if (hub && hub.id !== selectedHub.id) {
+      setSelectedHub(hub)
+      setSelectedState(hub.state)
+    }
+    setServerIncidents(prev => [incident, ...prev.filter(i => i.id !== incident.id)])
     broadcastChange()
     loadCommunity()
+  }
+
+  const handleToggleResponderMode = () => {
+    setResponderMode((prev) => {
+      const next = !prev
+      if (next && typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'default') {
+          Notification.requestPermission().catch(() => undefined)
+        }
+      }
+      return next
+    })
   }
 
   const handleVerify = async (id: string, verified: boolean) => {
@@ -171,13 +269,31 @@ export default function HomePage() {
   }
 
   // ── Derived ──────────────────────────────────────────────────────────────
+  const allIncidents = useMemo(() => {
+    const allDemos = Object.values(MOCK_INCIDENTS_BY_HUB).flat()
+    return [...serverIncidents, ...allDemos.filter(d => !serverIncidents.some(s => s.id === d.id))]
+  }, [serverIncidents])
+
   const incidents = useMemo(() => {
     const demos = MOCK_INCIDENTS_BY_HUB[selectedHub.id] ?? []
-    const real = serverIncidents.filter(i => i.hubId === selectedHub.id)
+    const real = serverIncidents.filter(i => i.hubId === selectedHub.id || i.state === selectedHub.state)
     return [...real, ...demos.filter(d => !real.some(r => r.id === d.id))]
-  }, [selectedHub.id, serverIncidents])
+  }, [selectedHub.id, selectedHub.state, serverIncidents])
 
-  const facilities = getFacilitiesByHub(selectedHub.id)
+  const facilities = useMemo(() => {
+    const curated = getFacilitiesByHub(selectedHub.id)
+    const fromJson = allFacilities.filter(f => f.hubId === selectedHub.id)
+    if (fromJson.length === 0) return curated
+
+    const combined: Facility[] = [...curated]
+    for (const f of fromJson) {
+      const isDuplicate = combined.some(
+        c => c.id === f.id || (Math.abs(c.lat - f.lat) < 0.0015 && Math.abs(c.lng - f.lng) < 0.0015)
+      )
+      if (!isDuplicate) combined.push(f)
+    }
+    return combined
+  }, [allFacilities, selectedHub.id])
   const verifiedShelters = facilities.filter(f => f.type === 'shelter' && f.verified).length
   const displayRisk = risk ?? EMPTY_RISK
   const displayWeather = weather ?? EMPTY_WEATHER
@@ -254,6 +370,15 @@ export default function HomePage() {
 
       <OfflineBanner />
 
+      {/* ── Screen Notification Alert for Responders (10km Radius) ── */}
+      <ResponderNotificationAlert
+        responderLocation={userLocation}
+        currentHub={selectedHub}
+        incidents={allIncidents}
+        responderMode={responderMode}
+        onAcknowledge={() => loadCommunity()}
+      />
+
       {risk && weather && <AlertBar risk={risk} hub={selectedHub} dataSource={weather.source} />}
 
       {/* ── Main Content ── */}
@@ -309,7 +434,7 @@ export default function HomePage() {
             ))}
           </div>
           <div className="flex-1" />
-          <button onClick={() => setResponderMode(p => !p)}
+          <button onClick={handleToggleResponderMode}
             className={`flex items-center gap-1.5 text-xs font-semibold border px-3 py-2 rounded-lg transition-colors ${responderMode ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'}`}
             title="Responder view: verify community reports">
             <ShieldCheck className="w-3.5 h-3.5" />
@@ -336,7 +461,13 @@ export default function HomePage() {
         {/* Tab content */}
         {activeTab === 'map' && (
           <div className="space-y-3">
-            <EmergencyMap hub={selectedHub} facilities={facilities} incidents={incidents} lowBandwidth={lowBandwidth} />
+            <EmergencyMap
+              hub={selectedHub}
+              facilities={facilities}
+              incidents={allIncidents}
+              responderLocation={userLocation}
+              lowBandwidth={lowBandwidth}
+            />
             {incidents.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2 flex-wrap">
@@ -351,6 +482,7 @@ export default function HomePage() {
                       key={incident.id}
                       incident={incident}
                       responderMode={responderMode}
+                      userLocation={userLocation}
                       onVerify={handleVerify}
                     />
                   ))}
@@ -421,8 +553,21 @@ export default function HomePage() {
         </footer>
       </main>
 
-      {/* Modals */}
-      <SosModal open={sosOpen} onClose={() => setSosOpen(false)} hub={selectedHub} />
+      {/* Modals & 10km Responder Danger Radar Bubble */}
+      <SosModal
+        open={sosOpen}
+        onClose={() => setSosOpen(false)}
+        hub={selectedHub}
+        onIncidentSubmit={handleIncidentSubmit}
+        onBroadcastSuccess={loadCommunity}
+      />
+      <ResponderDangerBubble
+        responderLocation={userLocation}
+        currentHub={selectedHub}
+        incidents={allIncidents}
+        responderMode={responderMode}
+        onAcknowledge={() => loadCommunity()}
+      />
       <IncidentReporter
         open={reporterOpen}
         onClose={() => setReporterOpen(false)}
@@ -442,10 +587,14 @@ export default function HomePage() {
 }
 
 function IncidentRow({
-  incident, responderMode, onVerify,
+  incident,
+  responderMode,
+  userLocation,
+  onVerify,
 }: {
   incident: Incident
   responderMode: boolean
+  userLocation: { lat: number; lng: number } | null
   onVerify: (id: string, verified: boolean) => void
 }) {
   const sevColor = {
@@ -459,8 +608,35 @@ function IncidentRow({
   const timeAgo = diff < 60000 ? 'just now' : diff < 3600000 ? `${Math.floor(diff / 60000)}m ago` : diff < 86400000 ? `${Math.floor(diff / 3600000)}h ago` : `${Math.floor(diff / 86400000)}d ago`
   const isDemo = incident.id.startsWith('i0')
 
+  const mapsUrl = incident.lat && incident.lng
+    ? getGoogleMapsDirectionsUrl(incident.lat, incident.lng, userLocation?.lat, userLocation?.lng)
+    : null
+
   return (
     <div className="px-4 py-3 hover:bg-slate-50 transition-colors">
+      {/* 🧭 TOP DIRECTION BUTTON FOR RESPONDERS */}
+      {responderMode && mapsUrl && (
+        <div className="mb-2 flex items-center justify-between bg-red-50/90 border border-red-200 px-2.5 py-1.5 rounded-lg">
+          <span className="text-[11px] font-bold text-red-700 uppercase tracking-wide flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+            </span>
+            Responder Dispatch
+          </span>
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs font-bold bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded shadow-sm transition-colors"
+            title="Open in Google Maps with turn-by-turn directions"
+          >
+            <Navigation className="w-3 h-3" />
+            <span>Open Directions</span>
+          </a>
+        </div>
+      )}
+
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">

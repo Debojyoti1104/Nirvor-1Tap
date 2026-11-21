@@ -94,7 +94,7 @@ export interface ReliefPost {
 }
 
 // ─── Shelter / Facility Types ──────────────────────────────────────────────
-export type FacilityType = 'shelter' | 'hospital' | 'police' | 'fire'
+export type FacilityType = 'shelter' | 'hospital' | 'police' | 'fire' | 'clinic' | 'ambulance'
 
 export interface Facility {
   id: string
@@ -110,6 +110,7 @@ export interface Facility {
   currentOccupancy?: number
   verified: boolean
   distance?: number
+  source?: string
 }
 
 // ─── Helpline Types ────────────────────────────────────────────────────────
