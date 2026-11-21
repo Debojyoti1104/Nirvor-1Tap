@@ -1,26 +1,37 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { CloudOff, RefreshCw, CheckCircle2 } from 'lucide-react'
-import { flushOutbox, pendingCount, readOutbox, SYNC_EVENT } from '@/lib/community'
+import { flushOutbox, pendingCount, readOutbox, clearOutbox, SYNC_EVENT } from '@/lib/community'
 
 export default function OfflineBanner() {
   const [online, setOnline] = useState(true)
   const [pending, setPending] = useState(0)
+  const [syncing, setSyncing] = useState(false)
   const [justSynced, setJustSynced] = useState(0)
+
+  const handleSync = useCallback(async () => {
+    if (syncing) return
+    setSyncing(true)
+    try {
+      const before = readOutbox().length
+      const remaining = await flushOutbox()
+      setPending(remaining)
+      if (before > 0 && remaining < before) {
+        setJustSynced(before - remaining)
+        setTimeout(() => setJustSynced(0), 4000)
+      }
+    } finally {
+      setSyncing(false)
+    }
+  }, [syncing])
 
   useEffect(() => {
     const refresh = () => setPending(pendingCount())
 
     const goOnline = async () => {
       setOnline(true)
-      const before = readOutbox().length
-      await flushOutbox()
-      refresh()
-      if (before > 0 && before > pendingCount()) {
-        setJustSynced(before)
-        setTimeout(() => setJustSynced(0), 5000)
-      }
+      await handleSync()
     }
     const goOffline = () => {
       setOnline(false)
@@ -30,10 +41,15 @@ export default function OfflineBanner() {
     setOnline(navigator.onLine)
     refresh()
 
+    // Auto-sync if online and there are pending items
+    if (navigator.onLine && pendingCount() > 0) {
+      handleSync()
+    }
+
     window.addEventListener('online', goOnline)
     window.addEventListener('offline', goOffline)
     window.addEventListener(SYNC_EVENT, refresh)
-    const poll = setInterval(refresh, 15000)
+    const poll = setInterval(refresh, 10000)
 
     return () => {
       window.removeEventListener('online', goOnline)
@@ -41,7 +57,7 @@ export default function OfflineBanner() {
       window.removeEventListener(SYNC_EVENT, refresh)
       clearInterval(poll)
     }
-  }, [])
+  }, [handleSync])
 
   if (!online) {
     return (
@@ -73,15 +89,28 @@ export default function OfflineBanner() {
   if (pending > 0) {
     return (
       <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-50 border-b border-amber-200">
-        <RefreshCw className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 animate-spin" />
+        <RefreshCw className={`w-3.5 h-3.5 text-amber-600 flex-shrink-0 ${syncing ? 'animate-spin' : ''}`} />
         <p className="text-xs text-amber-700 flex-1">
-          {pending} {pending === 1 ? 'report' : 'reports'} waiting to sync.
+          {syncing
+            ? `Syncing ${pending} ${pending === 1 ? 'report' : 'reports'} to cloud...`
+            : `${pending} ${pending === 1 ? 'report' : 'reports'} waiting to sync.`}
         </p>
         <button
-          onClick={() => flushOutbox().then(() => setPending(pendingCount()))}
-          className="text-xs font-semibold text-amber-800 underline flex-shrink-0"
+          onClick={handleSync}
+          disabled={syncing}
+          className="text-xs font-semibold text-amber-800 underline flex-shrink-0 disabled:opacity-50 hover:text-amber-950"
         >
-          Retry now
+          {syncing ? 'Syncing...' : 'Sync now'}
+        </button>
+        <button
+          onClick={() => {
+            clearOutbox()
+            setPending(0)
+          }}
+          className="text-xs text-amber-700 hover:text-amber-900 underline flex-shrink-0 ml-1.5"
+          title="Dismiss if reports are already delivered"
+        >
+          Dismiss
         </button>
       </div>
     )

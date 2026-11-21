@@ -21,16 +21,34 @@ export interface OutboxEntry {
   kind: OutboxKind
   body: Record<string, unknown>
   createdAt: string
+  retries?: number
 }
 
 // ─── Outbox ────────────────────────────────────────────────────────────────
 export function readOutbox(): OutboxEntry[] {
   if (typeof window === 'undefined') return []
   try {
-    return JSON.parse(localStorage.getItem(OUTBOX_KEY) ?? '[]') as OutboxEntry[]
+    const v1 = JSON.parse(localStorage.getItem(OUTBOX_KEY) ?? '[]') as OutboxEntry[]
+    const legacy = JSON.parse(localStorage.getItem('nc_outbox') ?? '[]') as OutboxEntry[]
+    if (Array.isArray(legacy) && legacy.length > 0) {
+      localStorage.removeItem('nc_outbox')
+      const merged = [...v1, ...legacy]
+      localStorage.setItem(OUTBOX_KEY, JSON.stringify(merged))
+      return merged
+    }
+    return Array.isArray(v1) ? v1 : []
   } catch {
     return []
   }
+}
+
+export function clearOutbox() {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(OUTBOX_KEY)
+    localStorage.removeItem('nc_outbox')
+  } catch { /* storage blocked */ }
+  window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { pending: 0 } }))
 }
 
 function writeOutbox(entries: OutboxEntry[]) {
@@ -53,31 +71,64 @@ export function pendingCount(): number {
   return readOutbox().length
 }
 
-async function send(entry: OutboxEntry) {
+async function send(entry: OutboxEntry): Promise<boolean> {
   const url = entry.kind.startsWith('incident') ? '/api/incidents' : '/api/relief'
   const method = entry.kind === 'incident' || entry.kind === 'relief' ? 'POST' : 'PATCH'
-  const res = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(entry.body),
-  })
-  return res.ok
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry.body),
+    })
+    // 200/201 = success, 409 = already delivered to database
+    if (res.ok || res.status === 409) return true
+
+    // If client error (400-499, except 429 rate limit), payload is invalid/handled,
+    // so consider it done to prevent infinite outbox retry loops.
+    if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+      return true
+    }
+
+    // Check if JSON response reports it is already delivered/duplicate
+    const data = await res.json().catch(() => null)
+    if (data?.duplicate || data?.error?.includes('duplicate') || data?.error?.includes('already exists')) {
+      return true
+    }
+    return false
+  } catch {
+    return false
+  }
 }
 
+let isFlushing = false
+
 export async function flushOutbox(): Promise<number> {
-  const entries = readOutbox()
-  if (entries.length === 0) return 0
-  const remaining: OutboxEntry[] = []
-  for (const entry of entries) {
-    try {
-      const ok = await send(entry)
-      if (!ok) remaining.push(entry)
-    } catch {
-      remaining.push(entry)
+  if (isFlushing) return pendingCount()
+  isFlushing = true
+  try {
+    const entries = readOutbox()
+    if (entries.length === 0) return 0
+    const remaining: OutboxEntry[] = []
+    for (const entry of entries) {
+      try {
+        const ok = await send(entry)
+        if (!ok) {
+          const retries = (entry.retries ?? 0) + 1
+          if (retries < 4) {
+            remaining.push({ ...entry, retries })
+          } else {
+            console.warn('[community] Dropping stalled outbox item after 4 retries:', entry.id)
+          }
+        }
+      } catch {
+        remaining.push(entry)
+      }
     }
+    writeOutbox(remaining)
+    return remaining.length
+  } finally {
+    isFlushing = false
   }
-  writeOutbox(remaining)
-  return remaining.length
 }
 
 // ─── Reads (cached for offline) ────────────────────────────────────────────

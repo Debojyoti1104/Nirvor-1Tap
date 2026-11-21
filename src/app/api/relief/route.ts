@@ -15,6 +15,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  let post: ReliefPost | null = null
   try {
     const body = (await request.json()) as Partial<ReliefPost>
     if (!body.description?.trim() || !body.category || !body.hubId || !body.state) {
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'kind must be need or offer' }, { status: 400 })
     }
 
-    const post: ReliefPost = {
+    post = {
       id: body.id ?? `relief-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       kind: body.kind,
       category: body.category,
@@ -42,6 +43,10 @@ export async function POST(request: Request) {
     const saved = await createRelief(post)
     return NextResponse.json({ post: saved, database: hasDatabase }, { status: 201 })
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    if (msg.includes('409') || msg.includes('duplicate key') || msg.includes('already exists')) {
+      return NextResponse.json({ post, database: hasDatabase, duplicate: true }, { status: 200 })
+    }
     console.error('[api/relief] POST', error)
     return NextResponse.json({ error: 'Could not save post' }, { status: 503 })
   }

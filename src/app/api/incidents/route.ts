@@ -15,6 +15,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  let incident: Incident | null = null
   try {
     const body = (await request.json()) as Partial<Incident>
     if (!body.description || !body.description.trim()) {
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'category, hubId and state are required' }, { status: 400 })
     }
 
-    const incident: Incident = {
+    incident = {
       id: body.id ?? `community-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       category: body.category,
       severity: body.severity ?? 'Moderate',
@@ -41,6 +42,10 @@ export async function POST(request: Request) {
     const saved = await createIncident(incident)
     return NextResponse.json({ incident: saved, database: hasDatabase }, { status: 201 })
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    if (msg.includes('409') || msg.includes('duplicate key') || msg.includes('already exists')) {
+      return NextResponse.json({ incident, database: hasDatabase, duplicate: true }, { status: 200 })
+    }
     console.error('[api/incidents] POST', error)
     return NextResponse.json({ error: 'Could not save report' }, { status: 503 })
   }

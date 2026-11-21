@@ -107,7 +107,7 @@ export async function createIncident(incident: Incident): Promise<Incident> {
   }
   const rows = (await req('incidents?select=*', {
     method: 'POST',
-    headers: { Prefer: 'return=representation' },
+    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
     body: JSON.stringify([{
       id: incident.id,
       category: incident.category,
@@ -155,7 +155,7 @@ export async function createRelief(post: ReliefPost): Promise<ReliefPost> {
   }
   const rows = (await req('relief_posts?select=*', {
     method: 'POST',
-    headers: { Prefer: 'return=representation' },
+    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
     body: JSON.stringify([{
       id: post.id,
       kind: post.kind,
