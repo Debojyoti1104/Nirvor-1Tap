@@ -1,6 +1,6 @@
 # Nirvor-1Tap
 
-**Northeast Connect — Community Emergency Assistant for North East India**
+**Northeast Connect — Community Emergency Assistant for North East India (PS05)**
 
 > A civic emergency platform for the 8 North Eastern states — built to keep working when the network, the power, or the road does not.
 
