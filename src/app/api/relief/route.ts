@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createRelief, hasDatabase, listRelief, updateRelief } from '@/lib/db'
+import { sanitizeText, isValidCoordinate } from '@/lib/sanitize'
 import type { ReliefPost, ReliefStatus } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -24,16 +25,19 @@ export async function POST(request: Request) {
     if (body.kind !== 'need' && body.kind !== 'offer') {
       return NextResponse.json({ error: 'kind must be need or offer' }, { status: 400 })
     }
+    if (!isValidCoordinate(body.lat, body.lng)) {
+      return NextResponse.json({ error: 'invalid coordinates' }, { status: 400 })
+    }
 
     post = {
       id: body.id ?? `relief-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       kind: body.kind,
-      category: body.category,
-      description: body.description.trim().slice(0, 800),
-      name: (body.name || 'Anonymous').slice(0, 60),
-      contact: (body.contact || '').slice(0, 80),
+      category: sanitizeText(body.category, 60),
+      description: sanitizeText(body.description, 800),
+      name: sanitizeText(body.name || 'Anonymous', 60),
+      contact: sanitizeText(body.contact || '', 80),
       state: body.state,
-      hubId: body.hubId,
+      hubId: sanitizeText(body.hubId, 50),
       lat: body.lat,
       lng: body.lng,
       status: 'open',

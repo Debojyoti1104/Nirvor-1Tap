@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createIncident, hasDatabase, listIncidents, verifyIncident } from '@/lib/db'
+import { sanitizeText, isValidCoordinate, isValidCategory, isValidSeverity } from '@/lib/sanitize'
 import type { Incident } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -25,13 +26,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'category, hubId and state are required' }, { status: 400 })
     }
 
+    if (!isValidCategory(body.category)) {
+      return NextResponse.json({ error: 'invalid category' }, { status: 400 })
+    }
+    if (body.severity && !isValidSeverity(body.severity)) {
+      return NextResponse.json({ error: 'invalid severity' }, { status: 400 })
+    }
+    if (!isValidCoordinate(body.lat, body.lng)) {
+      return NextResponse.json({ error: 'invalid coordinates' }, { status: 400 })
+    }
+
     incident = {
       id: body.id ?? `community-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       category: body.category,
       severity: body.severity ?? 'Moderate',
-      hubId: body.hubId,
+      hubId: sanitizeText(body.hubId, 50),
       state: body.state,
-      description: body.description.trim().slice(0, 800),
+      description: sanitizeText(body.description, 800),
       lat: body.lat,
       lng: body.lng,
       timestamp: body.timestamp ?? new Date().toISOString(),
